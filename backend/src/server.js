@@ -12,13 +12,6 @@ const billingRoutes = require("./routes/billing");
 const app = express();
 
 app.set('trust proxy', 1);
-```
-
-Commit and push:
-```
-git add backend/src/server.js
-git commit -m "fix trust proxy for Railway"
-git push
 
 const PORT = process.env.PORT || 3001;
 
