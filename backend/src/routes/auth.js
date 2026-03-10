@@ -16,6 +16,11 @@ function signToken(userId) {
 
 // ── POST /auth/register ───────────────────────────────────────────────────────
 router.post("/register", async (req, res) => {
+  // Registration is locked during beta. Set ALLOW_REGISTRATION=true in env to open it.
+  if (process.env.ALLOW_REGISTRATION !== "true") {
+    return res.status(403).json({ error: "Registration is currently by invitation only. Contact us to request access." });
+  }
+
   try {
     const { email, password, fullName, orgName } = req.body;
     if (!email || !password || !fullName || !orgName) {
@@ -193,26 +198,32 @@ router.post("/invite", requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).json({ error: `Seat limit (${req.user.seats}) reached. Upgrade your plan.` });
     }
 
-    const resetToken = uuidv4();
-    const resetExpires = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
-    const tempHash = await bcrypt.hash(uuidv4(), 12);
+    // Generate a readable temp password to hand off manually (since email may not be configured)
+    const tempPassword = uuidv4().slice(0, 12);
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
 
     const { rows } = await query(
-      `INSERT INTO users (org_id, email, password_hash, full_name, role, is_verified, reset_token, reset_expires)
-       VALUES ($1, $2, $3, $4, $5, false, $6, $7)
+      `INSERT INTO users (org_id, email, password_hash, full_name, role, is_verified)
+       VALUES ($1, $2, $3, $4, $5, true)
        RETURNING id, email, full_name, role`,
-      [req.orgId, email.toLowerCase(), tempHash, fullName, role, resetToken, resetExpires]
+      [req.orgId, email.toLowerCase(), passwordHash, fullName, role]
     );
 
-    await sendInvite({
+    // Try to send invite email — but don't fail if email isn't configured yet
+    sendInvite({
       to: email,
       fullName,
       inviterName: req.user.full_name,
       orgName: req.user.org_name,
-      resetToken,
-    });
+      resetToken: null,
+    }).catch((e) => console.log("Invite email skipped (email not configured):", e.message));
 
-    res.status(201).json({ user: rows[0], message: `Invite email sent to ${email}` });
+    // Always return the temp password so you can share it manually
+    res.status(201).json({
+      user: rows[0],
+      tempPassword,
+      message: `Account created for ${email}. Share the temp password with them directly.`,
+    });
   } catch (err) {
     if (err.code === "23505") return res.status(409).json({ error: "Email already registered" });
     console.error("Invite error:", err);
