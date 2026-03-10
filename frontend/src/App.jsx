@@ -188,11 +188,13 @@ function LoginScreen({ onAuth, initialMode }) {
             {loading ? "Please wait…" : { login: "Sign In", register: "Create Account", forgot: "Send Reset Link", reset: "Set Password" }[mode]}
           </button>
         </div>
-        <div style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 14 }}>
-          {mode === "login" && <>Don't have an account? <Lnk onClick={() => go("register")}>Sign up free</Lnk></>}
-          {mode === "register" && <>Already have an account? <Lnk onClick={() => go("login")}>Sign in</Lnk></>}
-          {(mode === "forgot" || mode === "reset") && <Lnk onClick={() => go("login")}>← Back to sign in</Lnk>}
-        </div>
+        {/* Registration disabled during beta
+<div style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 14 }}>
+  {mode === "login" && <>Don't have an account? <Lnk onClick={() => go("register")}>Sign up free</Lnk></>}
+  {mode === "register" && <>Already have an account? <Lnk onClick={() => go("login")}>Sign in</Lnk></>}
+  {(mode === "forgot" || mode === "reset") && <Lnk onClick={() => go("login")}>← Back to sign in</Lnk>}
+</div>
+*/}
         <div style={{ textAlign: "center", fontSize: 11, color: "#333", marginTop: 20 }}>
           <a href="/terms.html" style={{ color: "#333", textDecoration: "none" }} target="_blank">Terms of Service</a>{" · "}
           <a href="/privacy.html" style={{ color: "#333", textDecoration: "none" }} target="_blank">Privacy Policy</a>
