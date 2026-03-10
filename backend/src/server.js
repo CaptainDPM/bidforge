@@ -9,10 +9,9 @@ const projectRoutes = require("./routes/projects");
 const orgRoutes     = require("./routes/org");
 const billingRoutes = require("./routes/billing");
 const adminRoutes = require("./routes/admin");
-app.use("/admin", adminRoutes);
 
 const app = express();
-
+app.use("/admin", adminRoutes);
 app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 3001;
