@@ -146,7 +146,7 @@ router.post(
 
       // ── Executive summary ─────────────────────────────────────────────────
       send("step", { step: 2, label: "Writing executive summary…" });
-      const execSummary = await writeExecSummary(docs, solicitationType);
+      const execSummary = await writeExecSummary(docs, requirements, solicitationType);
 
       // ── Win themes ────────────────────────────────────────────────────────
       send("step", { step: 3, label: "Identifying win themes…" });
@@ -156,7 +156,7 @@ router.post(
       // ── Full proposal (streams chunks to client) ───────────────────────────
       send("step", { step: 4, label: "Drafting response…" });
       let proposal = "";
-      await draftProposal(docs, winThemes, (delta, full) => {
+      await draftProposal(docs, winThemes, requirements, (delta, full) => {
         proposal = full;
         send("chunk", { text: delta });
       }, solicitationType);
