@@ -228,6 +228,7 @@ export default function App() {
   const [err, setErr] = useState("");
   const [tab, setTab] = useState("matrix");
   const [copied, setCopied] = useState(false);
+  const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
 
   useEffect(() => {
     if (!hasToken()) { setAuthLoading(false); return; }
@@ -490,7 +491,6 @@ export default function App() {
     const execSummary = active.execSummary || "";
     const winThemes = active.winThemes || [];
     const project = active.project || {};
-    const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
     return (
       <div style={S.app}>
         <Header>
