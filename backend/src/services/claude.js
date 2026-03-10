@@ -89,6 +89,31 @@ function buildContext({ rfpText, capsText, ppText, companyName }) {
   ].filter(Boolean).join("\n");
 }
 
+// Build a plain-text compliance summary from the requirements array
+function buildComplianceSummary(requirements) {
+  if (!requirements || !requirements.length) return "";
+
+  const fully    = requirements.filter(r => r.status === "Fully Addressed");
+  const partial  = requirements.filter(r => r.status === "Partially Addressed");
+  const none     = requirements.filter(r => r.status === "Not Addressed");
+  const tbc      = requirements.filter(r => r.status === "To Be Confirmed");
+
+  const fmt = (reqs) => reqs.map(r => `  - ${r.requirement}`).join("\n") || "  (none)";
+
+  return `=== COMPLIANCE MATRIX SUMMARY ===
+FULLY ADDRESSED (claim these confidently):
+${fmt(fully)}
+
+PARTIALLY ADDRESSED (address carefully — only claim what the capabilities doc supports):
+${fmt(partial)}
+
+NOT ADDRESSED (DO NOT claim these — acknowledge the gap and suggest teaming/subcontracting if relevant):
+${fmt(none)}
+
+TO BE CONFIRMED (flag these as requiring clarification — do not fabricate a response):
+${fmt(tbc)}`;
+}
+
 // ─── Requirements extraction ──────────────────────────────────────────────────
 async function extractRequirements(docs, solicitationType = "rfp_federal") {
   const sol = getSolicitation(solicitationType);
@@ -134,18 +159,28 @@ Extract 12-20 of the most important requirements. Return the raw JSON array now:
 }
 
 // ─── Executive summary ────────────────────────────────────────────────────────
-async function writeExecSummary(docs, solicitationType = "rfp_federal") {
+async function writeExecSummary(docs, requirements, solicitationType = "rfp_federal") {
   const sol = getSolicitation(solicitationType);
   const context = buildContext(docs);
+  const complianceSummary = buildComplianceSummary(requirements);
 
   const prompt = `${context}
+
+${complianceSummary}
 
 === SOLICITATION TYPE ===
 ${sol.label} — ${sol.description}
 
+=== TASK ===
 Write a compelling executive summary for our ${sol.label} response.
 ${sol.summaryGuidance}
-Use active voice. Reference our capabilities directly against the stated requirements.`;
+
+=== CRITICAL HONESTY RULES ===
+- Only reference capabilities that are explicitly stated in the COMPANY CAPABILITIES section above.
+- For PARTIALLY ADDRESSED requirements, only claim what the capabilities doc directly supports — do not embellish.
+- For NOT ADDRESSED requirements, do NOT mention them in the executive summary at all, or briefly note we would address them through teaming arrangements.
+- For TO BE CONFIRMED requirements, do not make claims — note they require further discussion.
+- Use active voice. Reference our actual capabilities directly against the stated requirements.`;
 
   return claudeCall(sol.systemPersona, prompt);
 }
@@ -161,6 +196,7 @@ async function extractWinThemes(docs, solicitationType = "rfp_federal") {
 ${sol.label}
 
 Identify 5-7 win themes — the key differentiators that make this company the strongest choice for this ${sol.label}.
+Base win themes ONLY on capabilities explicitly stated in the company capabilities document.
 Consider what evaluators of a ${sol.label} care about most.
 Return ONLY a raw JSON array of short strings. No markdown. Example: ["Technical Excellence", "Local Presence", "Proven Experience"]`;
 
@@ -172,12 +208,15 @@ Return ONLY a raw JSON array of short strings. No markdown. Example: ["Technical
 }
 
 // ─── Full proposal draft (streaming) ─────────────────────────────────────────
-async function draftProposal(docs, winThemes, onChunk, solicitationType = "rfp_federal") {
+async function draftProposal(docs, winThemes, requirements, onChunk, solicitationType = "rfp_federal") {
   const sol = getSolicitation(solicitationType);
   const context = buildContext(docs);
   const sections = sol.proposalSections.join("\n");
+  const complianceSummary = buildComplianceSummary(requirements);
 
   const prompt = `${context}
+
+${complianceSummary}
 
 === SOLICITATION TYPE ===
 ${sol.label} — ${sol.description}
@@ -193,10 +232,18 @@ ${sections}
 === GUIDANCE ===
 ${sol.sectionGuidance}
 
-Be specific. Reference solicitation requirements by name or number. Show how our capabilities directly satisfy each requirement. Write as if this will be submitted as-is after light editing.`;
+=== CRITICAL HONESTY RULES — YOU MUST FOLLOW THESE ===
+1. FULLY ADDRESSED requirements: Write confidently and in detail. These are our strengths.
+2. PARTIALLY ADDRESSED requirements: Write carefully. Only claim what the capabilities document explicitly states. Do not infer, embellish, or assume capabilities that are not documented.
+3. NOT ADDRESSED requirements: Do NOT fabricate or imply we have these capabilities. Instead, briefly acknowledge the gap and propose a mitigation (e.g., "We would address this requirement through a teaming arrangement with a partner specializing in [area]" or "We are actively developing this capability and would bring in qualified subcontractors").
+4. TO BE CONFIRMED requirements: Note that these require further clarification and do not make definitive claims.
+5. NEVER invent past performance, certifications, tools, or experience that is not in the capabilities document.
+6. If a section of the proposal would require fabricated content to complete, write an honest placeholder instead.
+
+Be specific. Reference solicitation requirements by name or number where possible. Write as if this will be submitted after light editing — accuracy is more important than completeness.`;
 
   return claudeStream(
-    `${sol.systemPersona} Write a professional, detailed, winning ${sol.label} response. Use ## headers for each section.`,
+    `${sol.systemPersona} Write a professional, accurate, and honest ${sol.label} response. Never fabricate capabilities. Use ## headers for each section.`,
     prompt,
     onChunk,
     6000
