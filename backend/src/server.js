@@ -8,6 +8,8 @@ const authRoutes    = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
 const orgRoutes     = require("./routes/org");
 const billingRoutes = require("./routes/billing");
+const adminRoutes = require("./routes/admin");
+app.use("/admin", adminRoutes);
 
 const app = express();
 
