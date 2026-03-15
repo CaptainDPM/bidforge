@@ -236,6 +236,7 @@ export const api = {
       if (naics.length) params.set("naics", naics.join(","));
       if (setAside) params.set("setAside", setAside);
       if (keyword) params.set("keyword", keyword);
+      if (noticeType) params.set("noticeType", noticeType);
       params.set("limit", String(limit));
       params.set("offset", String(offset));
       return fetch(`${BASE}/sam/opportunities?${params.toString()}`, { headers: authHeaders() }).then(handleResponse);
