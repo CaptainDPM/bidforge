@@ -124,4 +124,14 @@ router.delete("/orgs/:orgId", requireAdminKey, async (req, res) => {
   }
 });
 
+// ── POST /admin/migrate ───────────────────────────────────────────────────────
+router.post("/migrate", requireAdminKey, async (req, res) => {
+  try {
+    await query("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS sam_profile TEXT");
+    res.json({ success: true, message: "Migration complete" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
