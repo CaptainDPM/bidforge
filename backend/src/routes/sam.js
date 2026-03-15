@@ -20,7 +20,7 @@ router.get("/profile", requireAuth, async (req, res) => {
 // ── POST /sam/profile ─────────────────────────────────────────────────────────
 router.post("/profile", requireAuth, async (req, res) => {
   try {
-    const { naicsCodes = [], setAside = "", keywords = "", noticeType = "" } = req.body;
+    const { naicsCodes = [], setAside = "", keywords = "", noticeType = "" } = req.body || {};
     const profile = JSON.stringify({ naicsCodes, setAside, keywords, noticeType });
     await query("UPDATE organizations SET sam_profile = $1 WHERE id = $2", [profile, req.orgId]);
     res.json({ success: true, profile: { naicsCodes, setAside, keywords, noticeType } });
