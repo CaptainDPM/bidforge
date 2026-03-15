@@ -260,7 +260,7 @@ function SamScreen({ user, onBack, onAnalyze }) {
     setLoading(true); setErr("");
     try {
       const naics = naicsInput.split(",").map(s => s.trim()).filter(Boolean);
-      const result = await api.sam.search({ naics, setAside, keyword, limit: LIMIT, offset: newOffset });
+      const result = await api.sam.search({ naics, setAside, keyword, noticeType, limit: LIMIT, offset: newOffset });
       setOpps(result.opportunities || []);
       setTotal(result.total || 0);
       setOffset(newOffset);
@@ -330,6 +330,17 @@ function SamScreen({ user, onBack, onAnalyze }) {
               <div>
                 <label style={S.label}>Keywords</label>
                 <input style={S.inp} placeholder="IT support, help desk, cloud..." value={keyword} onChange={(e) => setKeyword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search(0)} />
+              </div>
+              <div>
+                <label style={S.label}>Notice Type</label>
+                <select value={noticeType} onChange={(e) => setNoticeType(e.target.value)} style={{ ...S.inp, cursor: "pointer" }}>
+                  <option value="">All Types</option>
+                  <option value="o">Solicitation</option>
+                  <option value="p">Presolicitation</option>
+                  <option value="k">Combined Synopsis</option>
+                  <option value="r">Sources Sought</option>
+                  <option value="s">Special Notice</option>
+                </select>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10 }}>
