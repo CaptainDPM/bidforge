@@ -29,7 +29,7 @@ const authLimiter = rateLimit({ windowMs: 15*60*1000, max: 20,  message: { error
 
 app.use("/api/auth", authLimiter);
 app.use(limiter);
-app.use("/sam", samRoutes);
+app.use("/api/sam", samRoutes);
 
 // ⚠️ Stripe webhook MUST receive raw body — mount before express.json()
 app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
