@@ -235,6 +235,7 @@ function SamScreen({ user, onBack, onAnalyze }) {
   const [naicsInput, setNaicsInput] = useState("");
   const [keyword, setKeyword] = useState("");
   const [setAside, setSetAside] = useState("");
+  const [noticeType, setNoticeType] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
