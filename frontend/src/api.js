@@ -218,6 +218,32 @@ export const api = {
         body: JSON.stringify({ plan }),
       }).then(handleResponse),
   },
+
+  // ─── SAM.gov ─────────────────────────────────────────────────────────────────
+  sam: {
+    getProfile: () =>
+      fetch(`${BASE}/sam/profile`, { headers: authHeaders() }).then(handleResponse),
+
+    saveProfile: (body) =>
+      fetch(`${BASE}/sam/profile`, {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(body),
+      }).then(handleResponse),
+
+    search: ({ naics = [], setAside = "", keyword = "", limit = 20, offset = 0 } = {}) => {
+      const params = new URLSearchParams();
+      if (naics.length) params.set("naics", naics.join(","));
+      if (setAside) params.set("setAside", setAside);
+      if (keyword) params.set("keyword", keyword);
+      params.set("limit", String(limit));
+      params.set("offset", String(offset));
+      return fetch(`${BASE}/sam/opportunities?${params.toString()}`, { headers: authHeaders() }).then(handleResponse);
+    },
+
+    getOpportunity: (noticeId) =>
+      fetch(`${BASE}/sam/opportunities/${noticeId}`, { headers: authHeaders() }).then(handleResponse),
+  },
 };
 
 // Token management
