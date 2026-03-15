@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { api, saveToken, clearToken, hasToken } from "./api";
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
 const Ic = ({ d, size = 17, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />
@@ -25,9 +24,12 @@ const P = {
   logout: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9",
   users:  "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
   edit:   "M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z",
+  search: "M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z",
+  globe:  "M12 2a10 10 0 100 20A10 10 0 0012 2zM2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z",
+  clock:  "M12 2a10 10 0 100 20A10 10 0 0012 2zM12 6v6l4 2",
+  filter: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z",
 };
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
   bg: "#09090f", surface: "#0f0f1a", border: "#191926", border2: "#222232",
   gold: "#c8a96e", goldLight: "#e8c98e", text: "#ddddd5", muted: "#888",
@@ -108,11 +110,11 @@ function Steps({ labels, current }) {
   );
 }
 
-function LoginScreen({ onAuth, initialMode }) {
+function LoginScreen({ onAuth }) {
   const [mode, setMode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("token")) return "reset";
-    return initialMode || "login";
+    return "login";
   });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -149,10 +151,9 @@ function LoginScreen({ onAuth, initialMode }) {
   const onKey = (e) => { if (e.key === "Enter") submit(); };
   const go = (m) => { setMode(m); setErr(""); setSuccess(""); };
   const titles = {
-    login:    { h: "Welcome back",        sub: "Sign in to your BidForge workspace" },
-    register: { h: "Create your account", sub: "Start your free trial — no credit card required" },
-    forgot:   { h: "Reset your password", sub: "We'll email you a reset link" },
-    reset:    { h: "Set new password",    sub: "Choose a strong password for your account" },
+    login:  { h: "Welcome back",        sub: "Sign in to your BidForge workspace" },
+    forgot: { h: "Reset your password", sub: "We'll email you a reset link" },
+    reset:  { h: "Set new password",    sub: "Choose a strong password for your account" },
   };
   const { h, sub } = titles[mode] || titles.login;
 
@@ -172,29 +173,21 @@ function LoginScreen({ onAuth, initialMode }) {
         <div style={S.card}>
           <Err msg={err} />
           {success && <div style={{ background: "rgba(76,175,125,0.08)", border: "1px solid rgba(76,175,125,0.2)", borderRadius: 8, padding: "10px 13px", color: C.green, fontSize: 13, marginBottom: 14 }}>{success}</div>}
-          {mode === "register" && (<>
-            <div style={{ marginBottom: 14 }}><label style={S.label}>Full Name</label><input style={S.inp} placeholder="Derek Marquart" value={fullName} onChange={(e) => setFullName(e.target.value)} onKeyDown={onKey} /></div>
-            <div style={{ marginBottom: 14 }}><label style={S.label}>Company / Organization</label><input style={S.inp} placeholder="Marquart IT Solutions LLC" value={orgName} onChange={(e) => setOrgName(e.target.value)} onKeyDown={onKey} /></div>
-          </>)}
-          {(mode === "login" || mode === "register" || mode === "forgot") && (
+          {(mode === "login" || mode === "forgot") && (
             <div style={{ marginBottom: 14 }}><label style={S.label}>Email</label><input style={S.inp} type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={onKey} /></div>
           )}
-          {(mode === "login" || mode === "register") && (
-            <div style={{ marginBottom: mode === "login" ? 8 : 20 }}><label style={S.label}>Password</label><input style={S.inp} type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={onKey} /></div>
+          {mode === "login" && (
+            <div style={{ marginBottom: 8 }}><label style={S.label}>Password</label><input style={S.inp} type="password" placeholder="Min 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={onKey} /></div>
           )}
           {mode === "login" && <div style={{ textAlign: "right", marginBottom: 16 }}><button onClick={() => go("forgot")} style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 12 }}>Forgot password?</button></div>}
           {mode === "reset" && <div style={{ marginBottom: 20 }}><label style={S.label}>New Password</label><input style={S.inp} type="password" placeholder="Min 8 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} onKeyDown={onKey} autoFocus /></div>}
           <button onClick={submit} disabled={loading} style={{ ...S.btn, ...S.gold, width: "100%", justifyContent: "center", padding: "12px", fontSize: 14, opacity: loading ? 0.7 : 1 }}>
-            {loading ? "Please wait…" : { login: "Sign In", register: "Create Account", forgot: "Send Reset Link", reset: "Set Password" }[mode]}
+            {loading ? "Please wait…" : { login: "Sign In", forgot: "Send Reset Link", reset: "Set Password" }[mode]}
           </button>
         </div>
-        {/* Registration disabled during beta
-<div style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 14 }}>
-  {mode === "login" && <>Don't have an account? <Lnk onClick={() => go("register")}>Sign up free</Lnk></>}
-  {mode === "register" && <>Already have an account? <Lnk onClick={() => go("login")}>Sign in</Lnk></>}
-  {(mode === "forgot" || mode === "reset") && <Lnk onClick={() => go("login")}>← Back to sign in</Lnk>}
-</div>
-*/}
+        <div style={{ textAlign: "center", fontSize: 13, color: C.muted, marginTop: 14 }}>
+          {(mode === "forgot" || mode === "reset") && <Lnk onClick={() => go("login")}>← Back to sign in</Lnk>}
+        </div>
         <div style={{ textAlign: "center", fontSize: 11, color: "#333", marginTop: 20 }}>
           <a href="/terms.html" style={{ color: "#333", textDecoration: "none" }} target="_blank">Terms of Service</a>{" · "}
           <a href="/privacy.html" style={{ color: "#333", textDecoration: "none" }} target="_blank">Privacy Policy</a>
@@ -208,6 +201,227 @@ function LoginScreen({ onAuth, initialMode }) {
 const Lnk = ({ onClick, children }) => (
   <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", color: C.gold, fontWeight: 600 }}>{children}</button>
 );
+
+// ─── Deadline badge ───────────────────────────────────────────────────────────
+function DeadlineBadge({ dateStr }) {
+  if (!dateStr) return null;
+  const due = new Date(dateStr);
+  const now = new Date();
+  const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+  if (isNaN(days)) return null;
+  const color = days <= 7 ? C.red : days <= 21 ? C.gold : C.green;
+  const label = days < 0 ? "Closed" : days === 0 ? "Due today" : `${days}d left`;
+  return <Badge text={label} color={color} />;
+}
+
+function formatDate(str) {
+  if (!str) return "—";
+  try { return new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+  catch { return str; }
+}
+
+// ─── SAM Opportunities Screen ─────────────────────────────────────────────────
+function SamScreen({ user, onBack, onAnalyze }) {
+  const [opps, setOpps] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const LIMIT = 20;
+
+  // Profile / filter state
+  const [profile, setProfile] = useState({ naicsCodes: [], setAside: "", keywords: "" });
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [naicsInput, setNaicsInput] = useState("");
+  const [keyword, setKeyword] = useState("");
+  const [setAside, setSetAside] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Load saved profile on mount
+  useEffect(() => {
+    api.sam.getProfile().then((d) => {
+      const p = d.profile || {};
+      setProfile(p);
+      setNaicsInput((p.naicsCodes || []).join(", "));
+      setKeyword(p.keywords || "");
+      setSetAside(p.setAside || "");
+      setProfileLoaded(true);
+    }).catch(() => setProfileLoaded(true));
+  }, []);
+
+  // Auto-search once profile loads
+  useEffect(() => {
+    if (profileLoaded) search(0);
+  }, [profileLoaded]);
+
+  const search = async (newOffset = 0) => {
+    setLoading(true); setErr("");
+    try {
+      const naics = naicsInput.split(",").map(s => s.trim()).filter(Boolean);
+      const result = await api.sam.search({ naics, setAside, keyword, limit: LIMIT, offset: newOffset });
+      setOpps(result.opportunities || []);
+      setTotal(result.total || 0);
+      setOffset(newOffset);
+    } catch (e) {
+      setErr(e.message || "Search failed");
+    } finally { setLoading(false); }
+  };
+
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const naicsCodes = naicsInput.split(",").map(s => s.trim()).filter(Boolean);
+      await api.sam.saveProfile({ naicsCodes, setAside, keywords: keyword });
+    } catch {}
+    finally { setSavingProfile(false); }
+  };
+
+  const setAsideOptions = [
+    { value: "", label: "All Set-Asides" },
+    { value: "Total Small Business Set-Aside", label: "Small Business" },
+    { value: "Service-Disabled Veteran-Owned Small Business", label: "SDVOSB" },
+    { value: "8(a) Set-Aside", label: "8(a)" },
+    { value: "HUBZone Set-Aside", label: "HUBZone" },
+    { value: "Women-Owned Small Business", label: "WOSB" },
+  ];
+
+  return (
+    <div style={S.app}>
+      <header style={S.hdr}>
+        <div style={{ width: 26, height: 26, borderRadius: 6, background: `linear-gradient(135deg,${C.gold},#8b6914)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Ic d={P.zap} size={13} color={C.bg} />
+        </div>
+        <span style={S.logo}>BidForge</span>
+        <span style={{ fontSize: 12, color: C.dim, marginLeft: 4 }}>/ Opportunities</span>
+        <div style={{ flex: 1 }} />
+        <button onClick={onBack} style={{ ...S.btn, ...S.ghost, padding: "5px 10px", fontSize: 11 }}>
+          <Ic d={P.home} size={12} /> Back to Projects
+        </button>
+      </header>
+
+      <div style={S.main}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div>
+            <h1 style={{ ...S.h1, marginBottom: 4 }}>SAM.gov Opportunities</h1>
+            <div style={{ fontSize: 13, color: C.muted }}>Active federal solicitations matching your profile</div>
+          </div>
+          <button onClick={() => setShowFilters(f => !f)} style={{ ...S.btn, ...S.ghost }}>
+            <Ic d={P.filter} size={13} /> {showFilters ? "Hide Filters" : "Filters & Profile"}
+          </button>
+        </div>
+
+        {/* Filters panel */}
+        {showFilters && (
+          <div style={{ ...S.card, marginBottom: 20 }}>
+            <div style={{ ...S.h2, marginBottom: 16 }}>Search Profile</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
+              <div>
+                <label style={S.label}>NAICS Codes (comma separated)</label>
+                <input style={S.inp} placeholder="541513, 541519" value={naicsInput} onChange={(e) => setNaicsInput(e.target.value)} />
+              </div>
+              <div>
+                <label style={S.label}>Set-Aside Type</label>
+                <select value={setAside} onChange={(e) => setSetAside(e.target.value)} style={{ ...S.inp, cursor: "pointer" }}>
+                  {setAsideOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={S.label}>Keywords</label>
+                <input style={S.inp} placeholder="IT support, help desk, cloud..." value={keyword} onChange={(e) => setKeyword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search(0)} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => { saveProfile(); search(0); }} style={{ ...S.btn, ...S.gold }}>
+                <Ic d={P.search} size={13} color={C.bg} /> Search
+              </button>
+              <button onClick={saveProfile} disabled={savingProfile} style={{ ...S.btn, ...S.ghost }}>
+                {savingProfile ? "Saving…" : "Save as Default"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <Err msg={err} />
+
+        {loading ? (
+          <div style={{ textAlign: "center", padding: 60 }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", border: `3px solid ${C.border}`, borderTopColor: C.gold, animation: "spin 0.9s linear infinite", margin: "0 auto 16px" }} />
+            <div style={{ color: C.muted, fontSize: 13 }}>Searching SAM.gov…</div>
+          </div>
+        ) : opps.length === 0 ? (
+          <div style={{ ...S.card, textAlign: "center", padding: "60px 24px" }}>
+            <div style={{ fontFamily: "'Crimson Pro',Georgia,serif", fontSize: 22, color: C.muted, marginBottom: 10 }}>No opportunities found</div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>Try adjusting your NAICS codes or removing the set-aside filter.</div>
+            <button onClick={() => setShowFilters(true)} style={{ ...S.btn, ...S.ghost }}>
+              <Ic d={P.filter} size={13} /> Adjust Filters
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 14 }}>
+              Showing {offset + 1}–{Math.min(offset + LIMIT, total)} of {total.toLocaleString()} opportunities
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {opps.map((opp) => (
+                <div key={opp.noticeId} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#ccc", marginBottom: 5, lineHeight: 1.4 }}>{opp.title}</div>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>
+                        {opp.agency}{opp.solicitationNumber ? ` · ${opp.solicitationNumber}` : ""}
+                        {opp.placeOfPerformance ? ` · ${opp.placeOfPerformance}` : ""}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                        {opp.typeLabel && <Badge text={opp.typeLabel} color={C.blue} />}
+                        {opp.setAside && <Badge text={opp.setAside} color={C.gold} />}
+                        {opp.naicsCode && <Badge text={`NAICS ${opp.naicsCode}`} color={C.dim} />}
+                        <DeadlineBadge dateStr={opp.responseDeadline} />
+                        {opp.responseDeadline && (
+                          <span style={{ fontSize: 10, color: C.dim }}>
+                            <Ic d={P.clock} size={10} color={C.dim} /> Due {formatDate(opp.responseDeadline)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                      <button
+                        onClick={() => onAnalyze(opp)}
+                        style={{ ...S.btn, ...S.gold, padding: "7px 14px", fontSize: 12 }}
+                      >
+                        <Ic d={P.zap} size={12} color={C.bg} /> Analyze
+                      </button>
+                      <a
+                        href={opp.uiLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ ...S.btn, ...S.ghost, padding: "7px 14px", fontSize: 12, textDecoration: "none", justifyContent: "center" }}
+                      >
+                        <Ic d={P.globe} size={12} /> SAM.gov
+                      </a>
+                    </div>
+                  </div>
+                  {opp.description && (
+                    <div style={{ marginTop: 10, fontSize: 12, color: "#555", lineHeight: 1.6, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+                      {opp.description.slice(0, 280)}{opp.description.length > 280 ? "…" : ""}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 24 }}>
+              <button onClick={() => search(Math.max(0, offset - LIMIT))} disabled={offset === 0} style={{ ...S.btn, ...S.ghost, opacity: offset === 0 ? 0.4 : 1 }}>← Previous</button>
+              <button onClick={() => search(offset + LIMIT)} disabled={offset + LIMIT >= total} style={{ ...S.btn, ...S.ghost, opacity: offset + LIMIT >= total ? 0.4 : 1 }}>Next →</button>
+            </div>
+          </>
+        )}
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+}
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -256,6 +470,26 @@ export default function App() {
   }, []);
 
   const logout = () => { clearToken(); setUser(null); setProjects([]); setActive(null); setScreen("home"); };
+
+  // Pre-fill upload form from a SAM opportunity
+  const analyzeOpportunity = (opp) => {
+    setProjName(opp.title.slice(0, 80));
+    setRfpText(
+      `SOLICITATION: ${opp.title}\n` +
+      `AGENCY: ${opp.agency}\n` +
+      `SOLICITATION NUMBER: ${opp.solicitationNumber || "N/A"}\n` +
+      `TYPE: ${opp.typeLabel}\n` +
+      `SET-ASIDE: ${opp.setAside || "None"}\n` +
+      `NAICS: ${opp.naicsCode}\n` +
+      `RESPONSE DEADLINE: ${opp.responseDeadline || "See SAM.gov"}\n` +
+      `PLACE OF PERFORMANCE: ${opp.placeOfPerformance}\n\n` +
+      `DESCRIPTION:\n${opp.description || "See full notice on SAM.gov: " + opp.uiLink}`
+    );
+    setRfpFile(null);
+    setCoName("");
+    setErr("");
+    setScreen("upload");
+  };
 
   const run = () => {
     if (!rfpFile && !rfpText.trim()) { setErr("Upload an RFP or paste the text."); return; }
@@ -315,6 +549,9 @@ export default function App() {
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 12, color: C.muted }}>{user.full_name} · <span style={{ color: C.gold }}>{user.plan}</span></span>
+        <button onClick={() => setScreen("sam")} style={{ ...S.btn, ...S.ghost, padding: "5px 10px", fontSize: 11 }}>
+          <Ic d={P.globe} size={12} /> Opportunities
+        </button>
         <button onClick={() => setScreen("team")} style={{ ...S.btn, ...S.ghost, padding: "5px 10px", fontSize: 11 }}>
           <Ic d={P.users} size={12} /> Team
         </button>
@@ -328,6 +565,10 @@ export default function App() {
     </header>
   );
 
+  if (screen === "sam") return (
+    <SamScreen user={user} onBack={goHome} onAnalyze={analyzeOpportunity} />
+  );
+
   if (screen === "home") return (
     <div style={S.app}>
       <Header />
@@ -339,9 +580,14 @@ export default function App() {
               {user.api_calls_this_month} of {user.api_limit} analyses used this month · {user.org_name}
             </div>
           </div>
-          <button onClick={goUpload} style={{ ...S.btn, ...S.gold }}>
-            <Ic d={P.plus} size={14} color={C.bg} /> New Analysis
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => setScreen("sam")} style={{ ...S.btn, ...S.ghost }}>
+              <Ic d={P.globe} size={13} /> Browse Opportunities
+            </button>
+            <button onClick={goUpload} style={{ ...S.btn, ...S.gold }}>
+              <Ic d={P.plus} size={14} color={C.bg} /> New Analysis
+            </button>
+          </div>
         </div>
         <div style={{ marginBottom: 28 }}>
           <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: "hidden" }}>
@@ -353,10 +599,15 @@ export default function App() {
         ) : projects.length === 0 ? (
           <div style={{ ...S.card, textAlign: "center", padding: "60px 24px" }}>
             <div style={{ fontFamily: "'Crimson Pro',Georgia,serif", fontSize: 22, color: C.muted, marginBottom: 10 }}>No projects yet</div>
-            <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Upload your first RFP to get started.</div>
-            <button onClick={goUpload} style={{ ...S.btn, ...S.gold, padding: "12px 24px" }}>
-              <Ic d={P.plus} size={14} color={C.bg} /> Start New Analysis
-            </button>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>Upload your first RFP or browse live opportunities from SAM.gov.</div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button onClick={() => setScreen("sam")} style={{ ...S.btn, ...S.ghost, padding: "12px 24px" }}>
+                <Ic d={P.globe} size={14} /> Browse SAM.gov
+              </button>
+              <button onClick={goUpload} style={{ ...S.btn, ...S.gold, padding: "12px 24px" }}>
+                <Ic d={P.plus} size={14} color={C.bg} /> Upload RFP
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -673,7 +924,6 @@ export default function App() {
   return null;
 }
 
-// ─── Team Screen ──────────────────────────────────────────────────────────────
 function TeamScreen({ user, onBack }) {
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -712,9 +962,7 @@ function TeamScreen({ user, onBack }) {
         <h1 style={{ ...S.h1, marginBottom: 4 }}>Team Members</h1>
         <div style={{ fontSize: 13, color: C.muted, marginBottom: 28 }}>{user.org_name}</div>
         <div style={S.card}>
-          {loading ? (
-            <div style={{ color: C.muted, textAlign: "center", padding: 20 }}>Loading…</div>
-          ) : (
+          {loading ? <div style={{ color: C.muted, textAlign: "center", padding: 20 }}>Loading…</div> : (
             <div style={{ marginBottom: 8 }}>
               {team.map((m) => (
                 <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
