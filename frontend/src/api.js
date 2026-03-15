@@ -231,7 +231,7 @@ export const api = {
         body: JSON.stringify(body),
       }).then(handleResponse),
 
-    search: ({ naics = [], setAside = "", keyword = "", limit = 20, offset = 0 } = {}) => {
+    search: ({ naics = [], setAside = "", keyword = "", noticeType = "", limit = 20, offset = 0 } = {}) => {
       const params = new URLSearchParams();
       if (naics.length) params.set("naics", naics.join(","));
       if (setAside) params.set("setAside", setAside);
