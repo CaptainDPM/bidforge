@@ -9,6 +9,7 @@ const projectRoutes = require("./routes/projects");
 const orgRoutes     = require("./routes/org");
 const billingRoutes = require("./routes/billing");
 const adminRoutes = require("./routes/admin");
+const samRoutes = require("./routes/sam");
 
 const app = express();
 app.set('trust proxy', 1);
@@ -28,6 +29,7 @@ const authLimiter = rateLimit({ windowMs: 15*60*1000, max: 20,  message: { error
 
 app.use("/api/auth", authLimiter);
 app.use(limiter);
+app.use("/sam", samRoutes);
 
 // ⚠️ Stripe webhook MUST receive raw body — mount before express.json()
 app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
